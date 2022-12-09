@@ -28,7 +28,7 @@ for event in longpoll.listen():
     if event.type == VkEventType.MESSAGE_NEW:
         if event.to_me:
             request = event.text.lower()
-            inputData_user(event.user_id)
+            request = inputData_user(event.user_id, request)
             if request == "начать":
                 user_data = vkinder.out_data_user(event.user_id)
                 user_city = user_data[3]
@@ -53,8 +53,13 @@ for event in longpoll.listen():
                                                     if event.to_me:
                                                         request = event.text.lower()
                                                         user_city = search_cityWithRegion(event.user_id, request, request_city)
-                                                        break
+                                                        if user_city == "error":
+                                                            write_msg(event.user_id, "Что-то пошло не так,пожалуйста, повторите попытку позже")
+                                                        else:
+                                                            break
                                         break
+                                    elif user_city == "error":
+                                        write_msg(event.user_id, "Что-то пошло не так,пожалуйста, повторите попытку позже")
                                     else:
                                         break
                     elif user_age == 0:
@@ -92,10 +97,18 @@ for event in longpoll.listen():
                 else:
                     data = vkinder.out_data_user(event.user_id)
                     random_profile_id = profile_toUser(event.user_id, data)
-                    attachment = photo_profile(random_profile_id)
-                    if data[4] >= 18:
-                        send_photo(event.user_id, f"Вот кого нашел https://vk.com/id{random_profile_id}", attachment)
+                    if random_profile_id == "error":
+                        write_msg(event.user_id, "Что-то пошло не так,пожалуйста, повторите попытку позже")
                     else:
-                        write_msg(event.user_id,  f"Минимальный возраст для пользователей Vkinder — 18 лет.")
+                        attachment = photo_profile(random_profile_id)
+                        if  attachment == "error":
+                            write_msg(event.user_id, "Что-то пошло не так,пожалуйста, повторите попытку позже")
+                        else:
+                            if data[4] >= 18:
+                                send_photo(event.user_id, f"Вот кого нашел https://vk.com/id{random_profile_id}", attachment)
+                            else:
+                                write_msg(event.user_id,  f"Минимальный возраст для пользователей Vkinder — 18 лет.")
+            elif request == "error":
+                write_msg(event.user_id, "Что-то пошло не так,пожалуйста, повторите попытку позже")
             else:
                 write_msg(event.user_id, "Чтобы начать подбор напишите слово 'начать'")
